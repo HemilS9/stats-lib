@@ -186,7 +186,6 @@ double StatsLibrary::sum() {
 // }
 
 // // https://www.calculatorsoup.com/calculators/discretemathematics/combinations.php
-// // https://stackoverflow.com/questions/1838368/calculating-the-amount-of-combinations 
 // unsigned long int StatsLibrary::choose_helper(std::vector<vector<int>> &memo, int n, int r) {
 //     if (n == r) {
 //         return 1;
