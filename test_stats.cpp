@@ -4,7 +4,7 @@
 using namespace std;
 
 void ASSERT_EQUAL(string called_from, double a, double b) {
-    const double epsilon = 0.00001;
+    const double epsilon = 0.0001;
     if (abs(a - b) > epsilon) {
         cout << "Test failed in: " << called_from << endl;
         assert(false);
@@ -123,16 +123,16 @@ void test_IQR() {
     ASSERT_EQUAL("IQR", result, 12);
 }
 
-// void test_stdev() {
-//     vector<double> data = {11.9, -22, 0.5, 13, 16, 17};
-//     StatsLibrary stdev_one;
-//     stdev_one.data_init(data.begin(), data.end());
-//     double result = stdev_one.stdev();
-//     ASSERT_EQUAL("stdev", result, ???);
+void test_stdev() {
+    vector<double> data = {11.9, -22, 0.5, 13, 16, 17};
+    StatsLibrary stdev_one;
+    stdev_one.data_init(data.begin(), data.end());
+    double result = stdev_one.stdev();
+    ASSERT_EQUAL("stdev", result, 13.6567);
 
-//     data = {98, 15, 45.8, -2.2};
-//     StatsLibrary stdev_two;
-//     stdev_two.data_init(data.begin(), data.end());
-//     result = stdev_two.stdev();
-//     ASSERT_EQUAL("stdev", result, ???;
-// }
+    data = {98, 15, 45.8, -2.2};
+    StatsLibrary stdev_two;
+    stdev_two.data_init(data.begin(), data.end());
+    result = stdev_two.stdev();
+    ASSERT_EQUAL("stdev", result, 38.0808);
+}
