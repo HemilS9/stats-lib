@@ -66,6 +66,17 @@ double StatsLibrary::median() {
     }
 }
 
+// Returns the median of the data, which is more resistant to outliers
+// Assumes data is sorted
+double StatsLibrary::median(size_t start, size_t end) {
+    int middle = (end - start) / 2;
+    if ((end - start) % 2 == 0) {
+        return (data[middle] + data[middle - 1]) / 2;
+    } else {
+        return data[middle];
+    }
+}
+
 
 // Returns the standard deviation, which is a measure of how spread out the data is
 double StatsLibrary::stdev() {
@@ -83,10 +94,10 @@ double StatsLibrary::stdev() {
 double StatsLibrary::IQR() {
     std::sort(data.begin(), data.end());
 
-    int lower_index = data.size() / 4;
-    int upper_index = lower_index * 3;
-    
-    return data[upper_index] - data[lower_index];
+    double Q1 = median(0, data.size() / 2);
+    double Q3 = median(data.size() / 2, data.size());
+
+    return Q3 - Q1;
 }
 
 

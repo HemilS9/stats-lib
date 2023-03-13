@@ -18,8 +18,8 @@ void test_sum();
 void test_range();
 void test_median();
 void test_mode();
-// void test_IQR();
-// void test_stdev();
+void test_IQR();
+void test_stdev();
 // void test_z_score();
 // void test_summary();
 // void test_outliers();
@@ -108,3 +108,31 @@ void test_mode() {
     result = mode_two.mode();
     ASSERT_EQUAL("mode", result, 4);
 }
+
+void test_IQR() {
+    vector<double> data = {-2, 6, 11.7, -21, 2.9};
+    StatsLibrary IQR_one;
+    IQR_one.data_init(data.begin(), data.end());
+    double result = IQR_one.IQR();
+    ASSERT_EQUAL("IQR", result, 20.35);
+
+    data = {55, 12, -42, 11, 0, 5.5};
+    StatsLibrary IQR_two;
+    IQR_two.data_init(data.begin(), data.end());
+    result = IQR_two.IQR();
+    ASSERT_EQUAL("IQR", result, 12);
+}
+
+// void test_stdev() {
+//     vector<double> data = {11.9, -22, 0.5, 13, 16, 17};
+//     StatsLibrary stdev_one;
+//     stdev_one.data_init(data.begin(), data.end());
+//     double result = stdev_one.stdev();
+//     ASSERT_EQUAL("stdev", result, ???);
+
+//     data = {98, 15, 45.8, -2.2};
+//     StatsLibrary stdev_two;
+//     stdev_two.data_init(data.begin(), data.end());
+//     result = stdev_two.stdev();
+//     ASSERT_EQUAL("stdev", result, ???;
+// }

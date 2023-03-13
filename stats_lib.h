@@ -41,6 +41,7 @@ class StatsLibrary {
 
     // Returns the median of the data, which is more resistant to outliers
     double median();
+    double median(size_t start, size_t end);
 
     // Returns the standard deviation, which is a measure of how spread out the data is
     double stdev();
