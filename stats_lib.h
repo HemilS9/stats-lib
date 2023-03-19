@@ -48,9 +48,7 @@ class StatsLibrary {
 
     // Returns the Interquartile Range (IQR) of the data
     double IQR();
-
-    // Returns the z-score: a measure of how many standard deviations away from the mean a data point is
-    double z_score(double value);
+    std::pair<double, double> quartiles();
 
     // Prints the 5 Number Summary of the data to the provided output stream
     void print_summary(std::ostream& os);
@@ -61,11 +59,6 @@ class StatsLibrary {
     // Prints the confidence interval to the provided output stream, given the confidence level
     std::pair<double, double> confidence_interval(ConfidenceLevel conf_level);
 
-    // // Return nCr : the number of combinations of ways you can choose r values from n items
-    // unsigned long int choose(int n, int r);
-    // unsigned long int choose_helper(std::vector<vector<int>> &memo, int n, int r);
-
-    // // Return nPr : the number of permutations of ways you can choose r values from n items
-    // unsigned long int permute(int n, int r);
-    // unsigned long int permute_helper(std::vector<vector<int>> &memo, int n, int r);
+    // Returns the z-score: a measure of how many standard deviations away from the mean a data point is
+    double z_score(double mean_val, double stdev_val, double value);
 };

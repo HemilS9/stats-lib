@@ -13,6 +13,10 @@ using std::string, std::vector;
 
 // Returns the arithmetic mean of the data
 double StatsLibrary::mean() {
+    if (data.empty()) {
+        throw std::invalid_argument("Data must not be empty");
+    }
+
     double ans = StatsLibrary::sum();
     return ans / data.size();
 }
@@ -20,6 +24,10 @@ double StatsLibrary::mean() {
 
 // Returns the sum of the data
 double StatsLibrary::sum() {
+    if (data.empty()) {
+        throw std::invalid_argument("Data must not be empty");
+    }
+
     double ans = 0;
     for (double val : data) {
         ans += val;
@@ -30,6 +38,10 @@ double StatsLibrary::sum() {
 
 // Returns the range of the data: the difference between the maximum and minimum values
 double StatsLibrary::range() {
+    if (data.empty()) {
+        throw std::invalid_argument("Data must not be empty");
+    }
+
     double max_val = *std::max_element(data.begin(), data.end());
     double min_val = *std::min_element(data.begin(), data.end());
     return max_val - min_val;
@@ -38,6 +50,10 @@ double StatsLibrary::range() {
 
 // Returns the mode, or the most common value in the data. If there are multiple, returns the smallest
 double StatsLibrary::mode() {
+    if (data.empty()) {
+        throw std::invalid_argument("Data must not be empty");
+    }
+
     std::map<double, int> all_freqs;
     for (double val : data) {
         all_freqs[val]++;
@@ -57,20 +73,13 @@ double StatsLibrary::mode() {
 
 // Returns the median of the data, which is more resistant to outliers
 double StatsLibrary::median() {
+    if (data.empty()) {
+        throw std::invalid_argument("Data must not be empty");
+    }
     std::sort(data.begin(), data.end());
+
     int middle = data.size() / 2;
     if (data.size() % 2 == 0) {
-        return (data[middle] + data[middle - 1]) / 2;
-    } else {
-        return data[middle];
-    }
-}
-
-// Returns the median of the data, which is more resistant to outliers
-// Assumes data is sorted
-double StatsLibrary::median(size_t start, size_t end) {
-    int middle = (end - start) / 2;
-    if ((end - start) % 2 == 0) {
         return (data[middle] + data[middle - 1]) / 2;
     } else {
         return data[middle];
@@ -80,6 +89,9 @@ double StatsLibrary::median(size_t start, size_t end) {
 
 // Returns the standard deviation, which is a measure of how spread out the data is
 double StatsLibrary::stdev() {
+    if (data.empty()) {
+        throw std::invalid_argument("Data must not be empty");
+    }
     double result = 0;
     double mean_val = mean();
     for (double val : data) {
@@ -89,36 +101,70 @@ double StatsLibrary::stdev() {
     return std::sqrt(result);
 }
 
+// Returns the median of the data, which is more resistant to outliers
+// Assumes data is sorted
+double StatsLibrary::median(size_t start, size_t end) {
+    if (data.empty()) {
+        throw std::invalid_argument("Data must not be empty");
+    }
+
+    int middle = (end + start) / 2;
+    if ((end - start) % 2 == 0) {
+        return (data[middle] + data[middle - 1]) / 2;
+    } else {
+        return data[middle];
+    }
+}
 
 // Returns the Interquartile Range (IQR) of the data
 double StatsLibrary::IQR() {
+    if (data.size() < 4) {
+        throw std::invalid_argument("IQR requires at least 4 data points");
+    }
     std::sort(data.begin(), data.end());
 
-    double Q1 = median(0, data.size() / 2);
-    double Q3 = median(data.size() / 2, data.size());
+    double Q3, Q1 = median(0, data.size() / 2);
+    if (data.size() % 2 == 0) {
+        Q3 = median(data.size() / 2, data.size());
+    }
+    else {
+        Q3 = median((data.size() / 2) + 1, data.size());
+    }
 
     return Q3 - Q1;
 }
 
+std::pair<double, double> StatsLibrary::quartiles() {
+    if (data.size() < 4) {
+        throw std::invalid_argument("IQR requires at least 4 data points");
+    }
+    std::sort(data.begin(), data.end());
 
-// Returns the z-score: a measure of how many standard deviations away from the mean a data point is
-double StatsLibrary::z_score(double value) {
-    double mean_val = mean();
-    double stdev_val = stdev();
-    return (value - mean_val) / stdev_val;
+    double Q3, Q1 = median(0, data.size() / 2);
+    if (data.size() % 2 == 0) {
+        Q3 = median(data.size() / 2, data.size());
+    }
+    else {
+        Q3 = median((data.size() / 2) + 1, data.size());
+    }
+
+    return {Q1, Q3};
 }
 
 
 // Prints the 5 Number Summary of the data to the provided output stream
 void StatsLibrary::print_summary(std::ostream& os) {
+    if (data.size() < 4) {
+        throw std::invalid_argument("5 Number Summary requires at least 4 data points");
+    }
+
     double median_val = median();
     double min_val = data[0];
     double max_val = data.back();
 
-    int lower_index = data.size() / 4;
-    int upper_index = lower_index * 3;
-    double q1 = data[lower_index];
-    double q3 = data[upper_index];
+    std::pair<double, double> q1q3 = quartiles();
+    double q1 = q1q3.first;
+    double q3 = q1q3.second;
 
     os << "Min: " << min_val << std::endl;
     os << "Q1: " << q1 << std::endl;
@@ -132,6 +178,9 @@ void StatsLibrary::print_summary(std::ostream& os) {
 std::vector<double> StatsLibrary::find_outliers(OutlierPolicy policy) {
     std::vector<double> result;
     if (policy == OutlierPolicy::SD) {
+        if (data.empty()) {
+            throw std::invalid_argument("Data must not be empty");
+        }
         double mean_val = mean();
         double threshold = stdev() * 3;
         for (double val : data) {
@@ -141,10 +190,15 @@ std::vector<double> StatsLibrary::find_outliers(OutlierPolicy policy) {
         }
     }
     else if (policy == OutlierPolicy::IQR) {
-        double median_val = median();
+        if (data.size() < 4) {
+            throw std::invalid_argument("IQR requires at least 4 data points");
+        }
+        std::pair<double, double> q1q3 = quartiles();
+        double Q1 = q1q3.first;
+        double Q3 = q1q3.second;
         double threshold = IQR() * 1.5;
         for (double val : data) {
-            if (std::abs(val - median_val) >= threshold) {
+            if (val < (Q1 - threshold) || val > (Q3 + threshold)) {
                 result.push_back(val);
             }
         }
@@ -179,6 +233,11 @@ std::pair<double, double> StatsLibrary::confidence_interval(ConfidenceLevel conf
         default:
             throw std::invalid_argument("Invalid confidence level");
     }
+}
+
+// Returns the z-score: a measure of how many standard deviations away from the mean a data point is
+double StatsLibrary::z_score(double mean_val, double stdev_val, double value) {
+    return (value - mean_val) / stdev_val;
 }
 
 
