@@ -3,43 +3,39 @@
 using std::string, std::vector;
 
 
-// // Initialize the data vector
-// template<typename InputIterator>
-// void StatsLibrary::data_init(InputIterator begin, InputIterator end) {
-//     vector<double> temp(begin, end);
-//     data = temp;
-// }
-
-
 // Returns the arithmetic mean of the data
 double StatsLibrary::mean() {
     if (data.empty()) {
-        throw std::invalid_argument("Data must not be empty");
+        throw Invalid_Size_Error();
     }
+    if (mean_computed)
+        return mean_val;
 
-    double ans = StatsLibrary::sum();
-    return ans / data.size();
+    double sum_val = StatsLibrary::sum();
+    mean_val = sum_val / data.size();
+    mean_computed = true;
+    return mean_val;
 }
 
 
 // Returns the sum of the data
 double StatsLibrary::sum() {
     if (data.empty()) {
-        throw std::invalid_argument("Data must not be empty");
+        throw Invalid_Size_Error();
     }
 
-    double ans = 0;
+    double sum_val = 0;
     for (double val : data) {
-        ans += val;
+        sum_val += val;
     }
-    return ans;
+    return sum_val;
 }
 
 
 // Returns the range of the data: the difference between the maximum and minimum values
 double StatsLibrary::range() {
     if (data.empty()) {
-        throw std::invalid_argument("Data must not be empty");
+        throw Invalid_Size_Error();
     }
 
     double max_val = *std::max_element(data.begin(), data.end());
@@ -51,7 +47,7 @@ double StatsLibrary::range() {
 // Returns the mode, or the most common value in the data. If there are multiple, returns the smallest
 double StatsLibrary::mode() {
     if (data.empty()) {
-        throw std::invalid_argument("Data must not be empty");
+        throw Invalid_Size_Error();
     }
 
     std::map<double, int> all_freqs;
@@ -74,45 +70,56 @@ double StatsLibrary::mode() {
 // Returns the median of the data, which is more resistant to outliers
 double StatsLibrary::median() {
     if (data.empty()) {
-        throw std::invalid_argument("Data must not be empty");
+        throw Invalid_Size_Error();
     }
-    std::sort(data.begin(), data.end());
+    if (median_computed)
+        return median_val;
 
-    int middle = data.size() / 2;
-    if (data.size() % 2 == 0) {
-        return (data[middle] + data[middle - 1]) / 2;
+    int middle = sorted_data.size() / 2;
+    median_computed = true;
+    if (sorted_data.size() % 2 == 0) {
+        median_val = (sorted_data[middle] + sorted_data[middle - 1]) / 2;
+        return median_val;
     } else {
-        return data[middle];
+        median_val = sorted_data[middle];
+        return median_val;
     }
 }
 
 
-// Returns the standard deviation, which is a measure of how spread out the data is
+// Returns the population standard deviation, which is a measure of how spread out the data is
 double StatsLibrary::stdev() {
     if (data.empty()) {
-        throw std::invalid_argument("Data must not be empty");
+        throw Invalid_Size_Error();
     }
+    if (stdev_computed)
+        return stdev_val;
+    if (!mean_computed)
+        mean();
+
     double result = 0;
-    double mean_val = mean();
     for (double val : data) {
         result += (val - mean_val) * (val - mean_val);
     }
+
     result /= data.size();
-    return std::sqrt(result);
+    stdev_val = std::sqrt(result);
+    stdev_computed = true;
+    return stdev_val;
 }
 
 // Returns the median of the data, which is more resistant to outliers
 // Assumes data is sorted
 double StatsLibrary::median(size_t start, size_t end) {
-    if (data.empty()) {
-        throw std::invalid_argument("Data must not be empty");
+    if (sorted_data.empty()) {
+        throw Invalid_Size_Error();
     }
 
     int middle = (end + start) / 2;
     if ((end - start) % 2 == 0) {
-        return (data[middle] + data[middle - 1]) / 2;
+        return (sorted_data[middle] + sorted_data[middle - 1]) / 2;
     } else {
-        return data[middle];
+        return sorted_data[middle];
     }
 }
 
@@ -121,31 +128,22 @@ double StatsLibrary::IQR() {
     if (data.size() < 4) {
         throw std::invalid_argument("IQR requires at least 4 data points");
     }
-    std::sort(data.begin(), data.end());
-
-    double Q3, Q1 = median(0, data.size() / 2);
-    if (data.size() % 2 == 0) {
-        Q3 = median(data.size() / 2, data.size());
-    }
-    else {
-        Q3 = median((data.size() / 2) + 1, data.size());
-    }
-
-    return Q3 - Q1;
+    
+    std::pair<double, double> quartile_vals = quartiles();
+    return quartile_vals.second - quartile_vals.first;
 }
 
 std::pair<double, double> StatsLibrary::quartiles() {
-    if (data.size() < 4) {
+    if (sorted_data.size() < 4) {
         throw std::invalid_argument("IQR requires at least 4 data points");
     }
-    std::sort(data.begin(), data.end());
 
-    double Q3, Q1 = median(0, data.size() / 2);
-    if (data.size() % 2 == 0) {
-        Q3 = median(data.size() / 2, data.size());
+    double Q3, Q1 = median(0, sorted_data.size() / 2);
+    if (sorted_data.size() % 2 == 0) {
+        Q3 = median(sorted_data.size() / 2, sorted_data.size());
     }
     else {
-        Q3 = median((data.size() / 2) + 1, data.size());
+        Q3 = median((sorted_data.size() / 2) + 1, sorted_data.size());
     }
 
     return {Q1, Q3};
@@ -158,9 +156,11 @@ void StatsLibrary::print_summary(std::ostream& os) {
         throw std::invalid_argument("5 Number Summary requires at least 4 data points");
     }
 
-    double median_val = median();
-    double min_val = data[0];
-    double max_val = data.back();
+    if (!median_computed) 
+        median();
+
+    double min_val = sorted_data[0];
+    double max_val = sorted_data.back();
 
     std::pair<double, double> q1q3 = quartiles();
     double q1 = q1q3.first;
@@ -176,13 +176,17 @@ void StatsLibrary::print_summary(std::ostream& os) {
 
 // Return a list of outliers given the outlier policy
 std::vector<double> StatsLibrary::find_outliers(OutlierPolicy policy) {
+    if (!mean_computed)
+        mean();
+    if (!stdev_computed)
+        stdev();
+
     std::vector<double> result;
     if (policy == OutlierPolicy::SD) {
         if (data.empty()) {
-            throw std::invalid_argument("Data must not be empty");
+            throw Invalid_Size_Error();
         }
-        double mean_val = mean();
-        double threshold = stdev() * 3;
+        double threshold = stdev_val * 3;
         for (double val : data) {
             if (std::abs(val - mean_val) >= threshold) {
                 result.push_back(val);
@@ -212,63 +216,34 @@ std::vector<double> StatsLibrary::find_outliers(OutlierPolicy policy) {
 
 // Prints the confidence interval to the provided output stream, given the confidence level
 std::pair<double, double> StatsLibrary::confidence_interval(ConfidenceLevel conf_level) {
-    double mean_val = mean();
-    double stdev_val = stdev();
+    if (!stdev_computed) 
+        stdev();
+    if (!mean_computed)
+        mean();
+    
     double margin = stdev_val / std::sqrt(data.size());
 
     double lower = -1, upper = -1;
+    double mult;
     switch(conf_level) {
         case ConfidenceLevel::PCT_90: 
-            lower = mean_val - (1.645 * (margin));
-            upper = mean_val + (1.645 * (margin));
-            return {lower, upper};
+            mult = 1.645;
+            break;
         case ConfidenceLevel::PCT_95:
-            lower = mean_val - (1.96 * (margin));
-            upper = mean_val + (1.96 * (margin));
-            return {lower, upper};
+            mult = 1.96;
+            break;
         case ConfidenceLevel::PCT_99:
-            lower = mean_val - (2.576 * (margin));
-            upper = mean_val + (2.576 * (margin));
-            return {lower, upper};
+            mult = 2.576;
+            break;
         default:
             throw std::invalid_argument("Invalid confidence level");
     }
+    lower = mean_val - (mult * margin);
+    upper = mean_val + (mult * margin);
+    return {lower, upper};
 }
 
 // Returns the z-score: a measure of how many standard deviations away from the mean a data point is
-double StatsLibrary::z_score(double mean_val, double stdev_val, double value) {
-    return (value - mean_val) / stdev_val;
+double StatsLibrary::z_score(double mean_value, double stdev_value, double value) {
+    return (value - mean_value) / stdev_value;
 }
-
-
-// // Return nCr : the number of combinations of ways you can choose r values from n items
-// unsigned long int StatsLibrary::choose(int n, int r) {
-//     if (n < r) {
-//         return 0;
-//     }
-// }
-
-// // https://www.calculatorsoup.com/calculators/discretemathematics/combinations.php
-// unsigned long int StatsLibrary::choose_helper(std::vector<vector<int>> &memo, int n, int r) {
-//     if (n == r) {
-//         return 1;
-//     }
-//     if (r == 1) {
-//         return n;
-//     }
-// }
-
-
-// // Return nPr : the number of permutations of ways you can choose r values from n items
-// unsigned long int StatsLibrary::permute(int n, int r) {
-//     if (n < r) {
-//         return 0;
-//     }
-// }
-
-// // https://www.calculatorsoup.com/calculators/discretemathematics/permutations.php
-// unsigned long int StatsLibrary::permute_helper(std::vector<vector<int>> &memo, int n, int r) {
-//     if (r == 1) {
-//         return n;
-//     }
-// }
